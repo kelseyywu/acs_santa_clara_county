@@ -1,0 +1,79 @@
+---
+title: "acs_santa_clara_county"
+author: "Kelsey Wu"
+date: "4/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(gt)
+library(tidycensus)
+```
+
+```{r set_up_plot, include = FALSE}
+
+# Creating vector containing races
+
+racevars <- c(White = "B02001_002", 
+              Black = "B02001_003", 
+              Asian = "B02001_005",
+              Hispanic = "B03003_003")
+
+# Extract American Census Survey data for Santa Clara County, CA
+# Extract race data
+
+sc <- get_acs(geography = "tract",
+                  variables = racevars, 
+                  year = 2018,
+                  state = "CA",
+                  county = "Santa Clara County",
+                  geometry = TRUE,
+                  summary_var = "B02001_001") 
+
+```
+
+```{r map_of_race_breakdown, echo = FALSE}
+
+# Create faceted map with race breakdown
+
+sc %>%
+  
+  # Add percentage column containing percent population of each race
+  
+  mutate(Percent = 100 * (estimate / summary_est)) %>%
+  
+  # Create ggplot with fill distinguishing percent population
+  # and color distinguishing percent population
+  
+  ggplot(aes(fill = Percent, color = Percent)) +
+  
+  # Facet based on race
+  
+  facet_wrap(~ variable) +
+  
+  # Create visualization of simple feature object
+  
+  geom_sf() +
+  
+  # Reverse order of colors in viridis for fill distinguisher
+  
+  scale_fill_viridis_c(direction = -1) +
+  
+  # Reverse order of colors in viridis for color distinguisher
+  
+  scale_color_viridis_c(direction = -1) +
+  
+  # Add title and caption
+  
+  labs(title = "Racial geography of Santa Clara County, California",
+       caption = "Source: American Community Survey 2014-2018") +
+  
+  # Create blank background
+  
+  theme_void()
+
+```
